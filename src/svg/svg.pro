@@ -1,5 +1,5 @@
 TARGET     = QtSvg
-QT         = core-private gui-private
+QT         = core-private gui-private network-private
 qtHaveModule(widgets): QT += widgets-private
 
 DEFINES   += QT_NO_USING_NAMESPACE
