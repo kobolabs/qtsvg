@@ -165,7 +165,7 @@ QByteArray qt_inflateGZipDataFrom(QIODevice *device)
 }
 #endif
 
-QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
+QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName, QNetworkAccessManager *nam)
 {
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly)) {
@@ -177,12 +177,12 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
 #ifndef QT_NO_COMPRESS
     if (fileName.endsWith(QLatin1String(".svgz"), Qt::CaseInsensitive)
             || fileName.endsWith(QLatin1String(".svg.gz"), Qt::CaseInsensitive)) {
-        return load(qt_inflateGZipDataFrom(&file));
+        return load(qt_inflateGZipDataFrom(&file), nam);
     }
 #endif
 
     QSvgTinyDocument *doc = 0;
-    QSvgHandler handler(&file);
+    QSvgHandler handler(&file, nam);
     if (handler.ok()) {
         doc = handler.document();
         doc->m_animationDuration = handler.animationDuration();
@@ -193,17 +193,17 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
     return doc;
 }
 
-QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents)
+QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents, QNetworkAccessManager *nam)
 {
 #ifndef QT_NO_COMPRESS
     // Check for gzip magic number and inflate if appropriate
     if (contents.startsWith("\x1f\x8b")) {
         QBuffer buffer(const_cast<QByteArray *>(&contents));
-        return load(qt_inflateGZipDataFrom(&buffer));
+        return load(qt_inflateGZipDataFrom(&buffer), nam);
     }
 #endif
 
-    QSvgHandler handler(contents);
+    QSvgHandler handler(contents, nam);
 
     QSvgTinyDocument *doc = 0;
     if (handler.ok()) {
@@ -213,9 +213,9 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents)
     return doc;
 }
 
-QSvgTinyDocument * QSvgTinyDocument::load(QXmlStreamReader *contents)
+QSvgTinyDocument * QSvgTinyDocument::load(QXmlStreamReader *contents, QNetworkAccessManager *nam)
 {
-    QSvgHandler handler(contents);
+    QSvgHandler handler(contents, nam);
 
     QSvgTinyDocument *doc = 0;
     if (handler.ok()) {
