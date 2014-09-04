@@ -109,7 +109,7 @@ public:
     explicit QSvgRendererPrivate()
         : QObjectPrivate(),
           render(0), timer(0),
-          fps(30)
+          fps(30), nam(0)
     {}
     ~QSvgRendererPrivate()
     {
