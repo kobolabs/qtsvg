@@ -839,9 +839,7 @@ bool QSvgPaintEngine::begin(QPaintDevice *)
     *d->stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << endl << "<svg";
 
     if (d->size.isValid()) {
-        qreal wmm = d->size.width() * 25.4 / d->resolution;
-        qreal hmm = d->size.height() * 25.4 / d->resolution;
-        *d->stream << " width=\"" << wmm << "mm\" height=\"" << hmm << "mm\"" << endl;
+        *d->stream << " width=\"" << d->size.width() << "\" height=\"" << d->size.height() << "\"" << endl;
     }
 
     if (d->viewBox.isValid()) {
