@@ -101,7 +101,7 @@ public:
         attributes.font_style = QLatin1String("normal");
         attributes.font_weight = QLatin1String("normal");
 
-        afterFirstUpdate = false;
+        stateOpen = false;
         numGradients = 0;
     }
 
@@ -114,7 +114,10 @@ public:
     QString header;
     QString defs;
     QString body;
-    bool    afterFirstUpdate;
+
+    void openState();
+    QString state;
+    bool stateOpen;
 
     QBrush brush;
     QPen pen;
@@ -888,8 +891,10 @@ bool QSvgPaintEngine::end()
     *d->stream << d->header;
     *d->stream << d->defs;
     *d->stream << d->body;
-    if (d->afterFirstUpdate)
+    if (d->stateOpen) {
         *d->stream << "</g>" << endl; // close the updateState
+        d->stateOpen = false;
+    }
 
     *d->stream << "</g>" << endl // close the Qt defaults
                << "</svg>" << endl;
@@ -939,9 +944,13 @@ void QSvgPaintEngine::updateState(const QPaintEngineState &state)
     flags |= QPaintEngine::AllDirty;
 
     // close old state and start a new one...
-    if (d->afterFirstUpdate)
+    if (d->stateOpen) {
         *d->stream << "</g>\n\n";
+        d->stateOpen = false;
+    }
 
+    d->state.clear();
+    d->stream->setString(&d->state);
     *d->stream << "<g ";
 
     if (flags & QPaintEngine::DirtyBrush) {
@@ -973,12 +982,25 @@ void QSvgPaintEngine::updateState(const QPaintEngineState &state)
 
     *d->stream << '>' << endl;
 
-    d->afterFirstUpdate = true;
+    d->stream->setString(&d->body);
+}
+
+
+void QSvgPaintEnginePrivate::openState()
+{
+    if (state.isEmpty())
+        return;
+
+    *stream << state;
+    state.clear();
+    stateOpen = true;
 }
 
 void QSvgPaintEngine::drawPath(const QPainterPath &p)
 {
     Q_D(QSvgPaintEngine);
+
+    d->openState();
 
     *d->stream << "<path vector-effect=\""
                << (state->pen().isCosmetic() ? "non-scaling-stroke" : "none")
@@ -1051,6 +1073,8 @@ void QSvgPaintEngine::drawTextItem(const QPointF &pt, const QTextItem &textItem)
     Q_D(QSvgPaintEngine);
     if (d->pen.style() == Qt::NoPen)
         return;
+
+    d->openState();
 
     const QTextItemInt &ti = static_cast<const QTextItemInt &>(textItem);
     QString s = QString::fromRawData(ti.chars, ti.num_chars);
